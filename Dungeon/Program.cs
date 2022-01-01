@@ -7,25 +7,7 @@ using System.IO;
 
 namespace Dungeon
 {
-    public struct Player
-    {
-        public string name;
-        public int level;
-        public double health;
-        public int mana;
-        public int attackMaxDamage;
-        public int attackMinDamage;
-        public double dodgeChance;
-        public double defense;
-        public Items equipped;
-        public Conditions currentCondition;
-    }
-    public struct Debug
-    {
-        public string name;
-        public int section;
-    }
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
@@ -34,21 +16,36 @@ namespace Dungeon
             Console.Clear();
 
             string username = Environment.UserName; //Username del pc dell'utente
-            string fileData = System.AppDomain.CurrentDomain.BaseDirectory + @"data\config.txt"; //Folder di installazione dell'utente
+            string fileData =
+                System.AppDomain.CurrentDomain.BaseDirectory + @"data\config.txt"; //Folder di installazione dell'utente
 
-            if (File.Exists(fileData))//controllo se ci sia un salvataggio
+            if (File.Exists(fileData)) //controllo se ci sia un salvataggio
             {
-                var data = DataLoader(fileData);//Carico i dati nel salvataggio
+                var data = DataLoader(fileData); //Carico i dati nel salvataggio
                 Player player = data.Item1;
-                List<Items> Inventory = data.Item2;
+                List<Item> inventory = data.Item2;
 
-                Console.Write("[@] ");
+                Console.Write("[#] ");
 
-                string[] welcome = { "W", "E", "L", "C", "O", "M", "E", " ", "B", "A", "C", "K", " ",};
+                string[] welcomes = new[]
+                {
+                    "Welcome back ",
+                    "Glad to see you here ",
+                    "The journey is ready for you ",
+                    "Enjoy your stay ",
+                    "The adventure is waiting for you ",
+                    "Hello again ",
+                    "Oh, hello ",
+                };
+
                 string nickname = player.name;
                 char[] nicknameChar = nickname.ToCharArray();
 
-                foreach (string element in welcome)
+                Random rnd = new Random();
+
+                var welcome = welcomes[rnd.Next(welcomes.Length)].ToUpper().ToCharArray();
+
+                foreach (var element in welcome)
                 {
                     Console.Write(element);
                     System.Threading.Thread.Sleep(50);
@@ -62,82 +59,86 @@ namespace Dungeon
 
                 Console.WriteLine(String.Empty);
 
-                GameCore(player, Inventory, fileData);//Avvio il gioco con i dati caricati
+                GameCore(player, inventory, fileData); //Avvio il gioco con i dati caricati
             }
             else
             {
-                newUser(fileData);//Creo un nuovo salvataggio
+                NewUser(fileData); //Creo un nuovo salvataggio
             }
         }
 
-        public static void newUser (string fileData)
+        private static void NewUser(string fileData)
         {
-            string[] welcome1 = { "W", "E", "L", "C", "O", "M", "E", " ", "I", "N", " ", "D", "U", "N", "G", "E", "O", "N" };
-            string[] welcome2 = { "W", "E", "L", "C", "O", "M", "E", " ", "A", "B", "O", "A", "R", "D", " " };
+            char[] welcome1 = "Welcome in dungeon ".ToUpper().ToCharArray();
+            char[] welcome2 = "Enjoy the journey ".ToUpper().ToCharArray();
 
-            Console.Write("[@] ");
+            string nickname;
 
-            foreach (string element in welcome1)
+            Console.Write("[#] ");
+
+            foreach (var element in welcome1)
             {
                 Console.Write(element);
                 System.Threading.Thread.Sleep(150);
             }
 
-            System.Threading.Thread.Sleep(50);
-            Console.WriteLine(String.Empty);
-            Console.Write("\n" + "[?] Put here your username: ");
-
-            string nickname = Console.ReadLine().ToUpper();
-            char[] nicknameChar = nickname.ToCharArray();
-
-            Console.WriteLine(String.Empty);
-            Console.Write("[@] ");
-
-            foreach (string element in welcome2)
+            do
             {
-                Console.Write(element);
                 System.Threading.Thread.Sleep(50);
-            }
-            foreach (char element in nicknameChar)
-            {
-                Console.Write(element);
-                System.Threading.Thread.Sleep(50);
-            }
+                Console.WriteLine(String.Empty);
+                Console.Write("\n" + "[?] Write a name for your character: ");
+
+                nickname = Console.ReadLine()?.ToUpper();
+
+                if (nickname != null)
+                {
+                    char[] nicknameChar = nickname.ToCharArray();
+
+                    Console.WriteLine(String.Empty);
+                    Console.Write("[#] ");
+
+                    foreach (var element in welcome2)
+                    {
+                        Console.Write(element);
+                        System.Threading.Thread.Sleep(50);
+                    }
+
+                    foreach (char element in nicknameChar)
+                    {
+                        Console.Write(element);
+                        System.Threading.Thread.Sleep(50);
+                    }
+                }
+                else
+                {
+                    Console.Clear();
+                }
+            } while (string.IsNullOrEmpty(nickname));
 
             Console.WriteLine(String.Empty);
- 
+
             //Default values for player
+
             #region PlayerConfig
-            Player player;
-            player.name = nickname;
-            player.level = 0;
-            player.health = 100;
-            player.mana = 10;
-            player.attackMaxDamage = 15;
-            player.attackMinDamage = 5;
-            player.dodgeChance = 13f;
-            player.defense = 10;
-            player.equipped = Items.Basic_Axe;
-            player.currentCondition = Conditions.None;
-            List<Items> Inventory = new List<Items>();
-            Inventory.Add(Items.Basic_Axe);
+
+            Player player = new Player(nickname);
+            List<Item> inventory = new List<Item>();
+
             #endregion
 
-            GameCore(player, Inventory, fileData);//Avvio la partita con i valori base
-
+            GameCore(player, inventory, fileData); //Avvio la partita con i valori base
         }
-        
-        public static void GameCore(Player player, List<Items> Inventory, string fileData)
+
+        private static void GameCore(Player player, List<Item> inventory, string fileData)
         {
             bool ignore = false;
             bool game = true;
 
-            while(game)
+            while (game)
             {
                 while (player.health > 0)
                 {
-
-                    DataSaver(player, Inventory, fileData);
+                    DataSaver(player, inventory, fileData);
                     if (ignore == true)
                     {
                         ignore = false;
@@ -155,11 +156,13 @@ namespace Dungeon
                     //Se c'è un errore lo stampo su schermo
                     if (!String.IsNullOrEmpty(error.name))
                     {
-                        Console.WriteLine(String.Empty);
-                        Console.WriteLine(error.name);
+                        Console.Clear();
+                        ignore = true;
                     }
                     else //Eseguo azione di gameplay in base all'input
                     {
+                       (Player, List<Item>)? newData = null;
+                        
                         switch (error.section)
                         {
                             case 0:
@@ -168,22 +171,31 @@ namespace Dungeon
                                 break;
 
                             case 1:
-                                var a = Gameplay.Explore(player, Inventory);
-                                player = a.Item1;
-                                Inventory = a.Item2;
-                                break;
+                                newData = Gameplay.Explore(player, inventory);
+                                goto case -999;
                             case 2:
-                                var b = Menu.GetInventory(player, Inventory);
-                                player = b.Item1;
-                                Inventory = b.Item2;
+                                newData = Menu.GetInventory(player, inventory);
                                 ignore = true;
-                                break;
+                                goto case -999;
 
                             case 3:
-                                var c = Menu.GetProfile(player, Inventory);
-                                player = c.Item1;
-                                Inventory = c.Item2;
+                                newData = Menu.GetProfile(player, inventory);
+                                goto case -999;
+                            
+                            case 4:
+                                newData = Gameplay.Rest(player, inventory);
+                                goto case -999;
+                            
+                            case -999:
+                                if (newData != null)
+                                {
+                                    player = newData.Value.Item1;
+                                    inventory = newData.Value.Item2;
+                                }
+
                                 break;
+                                
+                            default: goto case 0;
                         }
                     }
                 }
@@ -193,24 +205,28 @@ namespace Dungeon
                 Menu.Clear();
 
                 //Setto ai dati base il player
+
                 #region PlayerConfig
+
                 player.level = 0;
+                player.steps = 0;
                 player.health = 100;
+                player.stamina = 100;
                 player.mana = 10;
+                player.gold = 0;
                 player.attackMaxDamage = 15;
                 player.attackMinDamage = 5;
                 player.dodgeChance = 13f;
                 player.defense = 10;
-                player.equipped = Items.Basic_Axe;
+                player.equipped = Item.BasicAxe;
                 player.currentCondition = Conditions.None;
-                Inventory.Clear();
-                Inventory.Add(Items.Basic_Axe);
+                inventory.Clear();
+
                 #endregion
             }
-
         }
 
-        public static void DataSaver(Player player, List<Items> Inventory, string fileData)
+        private static void DataSaver(Player player, List<Item> inventory, string fileData)
         {
             //Creo il file config
             using (FileStream fs = File.Create(fileData))
@@ -224,8 +240,11 @@ namespace Dungeon
             //Scrivo le variabili sul file
             sr.WriteLine(player.name);
             sr.WriteLine(player.level);
+            sr.WriteLine(player.steps);
             sr.WriteLine(player.health);
+            sr.WriteLine(player.stamina);
             sr.WriteLine(player.mana);
+            sr.WriteLine(player.gold);
             sr.WriteLine(player.attackMaxDamage);
             sr.WriteLine(player.attackMinDamage);
             sr.WriteLine(player.dodgeChance);
@@ -233,47 +252,49 @@ namespace Dungeon
             sr.WriteLine(player.equipped);
             sr.WriteLine(player.currentCondition);
 
-            for(int i = 0; i < Inventory.Count; i++)
+            for (int i = 0; i < inventory.Count; i++)
             {
-                sr.WriteLine(Inventory[i]);
+                sr.WriteLine(inventory[i]);
             }
 
-        //Chiudo l'editing del file     
-        sr.Close();
+            //Chiudo l'editing del file     
+            sr.Close();
         }
 
-        public static (Player, List<Items>) DataLoader(string fileData)
+        private static (Player, List<Item>) DataLoader(string fileData)
         {
-            Player player;
-            List<Items> Inventory = new List<Items>();
-
             //Apro il file
             StreamReader sr = new StreamReader(fileData);
+            
+            Player player = new Player(sr.ReadLine());
+            List<Item> inventory = new List<Item>();
 
             //Leggo e assegno alle variabili
-            player.name = sr.ReadLine();
-            player.level = int.Parse(sr.ReadLine());
-            player.health = double.Parse(sr.ReadLine());
-            player.mana = int.Parse(sr.ReadLine());
-            player.attackMaxDamage = int.Parse(sr.ReadLine());
-            player.attackMinDamage = int.Parse(sr.ReadLine());
-            player.dodgeChance = double.Parse(sr.ReadLine());
-            player.defense = double.Parse(sr.ReadLine());
-            player.equipped = (Items)System.Enum.Parse(typeof(Items), sr.ReadLine());
-            player.currentCondition = (Conditions)System.Enum.Parse(typeof(Conditions), sr.ReadLine());
+            player.level = int.Parse(sr.ReadLine() ?? string.Empty);
+            player.steps = int.Parse(sr.ReadLine() ?? string.Empty);
+            player.health = double.Parse(sr.ReadLine() ?? string.Empty);
+            player.stamina = double.Parse(sr.ReadLine() ?? string.Empty);
+            player.mana = int.Parse(sr.ReadLine() ?? string.Empty);
+            player.gold = int.Parse(sr.ReadLine() ?? string.Empty);
+            player.attackMaxDamage = int.Parse(sr.ReadLine() ?? string.Empty);
+            player.attackMinDamage = int.Parse(sr.ReadLine() ?? string.Empty);
+            player.dodgeChance = double.Parse(sr.ReadLine() ?? string.Empty);
+            player.defense = double.Parse(sr.ReadLine() ?? string.Empty);
+            player.equipped = (Item) System.Enum.Parse(typeof(Item), sr.ReadLine() ?? string.Empty);
+            player.currentCondition = (Conditions) System.Enum.Parse(typeof(Conditions), sr.ReadLine() ?? string.Empty);
 
-            while(!sr.EndOfStream)
+            while (!sr.EndOfStream)
             {
-                Inventory.Add((Items)System.Enum.Parse(typeof(Items), sr.ReadLine()));
+                inventory.Add((Item) System.Enum.Parse(typeof(Item), sr.ReadLine() ?? string.Empty));
             }
 
             //Chiudo l'editing del file
             sr.Close();
 
-            return (player, Inventory);
+            return (player, inventory);
         }
 
-        public static Debug Debugger(int e)
+        private static Debug Debugger(int e)
         {
             Debug error;
 
@@ -283,30 +304,31 @@ namespace Dungeon
             //Se è -1 allora c'è errore
             if (e < 0)
             {
-                error.name = "\n" + "[x] The typed section does not exist, retry";
+                error.name = "[x] The typed section does not exist, retry";
                 return error;
             }
-            else if(e == 0)
+            else if (e == 0)
             {
-                error.section = 0; //Ignoro l'input
+                error.section = 0; //Nope
             }
-            else if (e == 1) //Setto sezione a esplorazione
+            else if (e == 1) //Explore
             {
                 error.section = 1;
             }
-            else if (e == 2) //Setto sezione a inventario
+            else if (e == 2) //Inventory
             {
                 error.section = 2;
             }
-            else if (e == 3)//Setto sezione a profilo
+            else if (e == 3) //Profile
             {
                 error.section = 3;
             }
+            else if(e == 4)
+            {
+                error.section = 4;
+            }
 
             return error;
-
         }
-
-
     }
 }

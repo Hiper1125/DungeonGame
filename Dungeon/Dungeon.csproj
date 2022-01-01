@@ -72,11 +72,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Conditions.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="Enemy.cs" />
     <Compile Include="EnemyName.cs" />
     <Compile Include="Gameplay.cs" />
-    <Compile Include="Items.cs" />
+    <Compile Include="Item.cs" />
     <Compile Include="Menu.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
