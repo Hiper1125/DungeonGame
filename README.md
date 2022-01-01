@@ -1,10 +1,14 @@
 # **Dungeon Game** 
 > A [DOT.NET](https://dotnet.microsoft.com/) console game written in C#
 
+![gameplay](https://user-images.githubusercontent.com/50762724/147854446-2f94c270-5e98-4448-9e06-b8dda83a61ff.gif)
+
 # Features
-> Start a game, explore and loot, then enjoy the fighting with random enemies.
+> Explore, obtain items, and fight against random enemies with your inventory.
 >  
-> Keep your inventory and your data when quitting the game.
+> Keep your items and your data stored when closing the game.
+>
+> Sell items, gain and lose stamina, then explore again!
 > 
 > All in a old-looking console style.
 
